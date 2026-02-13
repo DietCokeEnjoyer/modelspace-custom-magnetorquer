@@ -31,21 +31,23 @@ namespace modelspace {
         // Model params
         //         NAME                     TYPE                    DEFAULT VALUE
         START_PARAMS
-            // DO we need any?
+            // None
         END_PARAMS
 
         // Model inputs
         //         NAME                     TYPE                    DEFAULT VALUE
         START_INPUTS
-            /** T */
-            SIGNAL(input_torque,                       CartesianVector3,                 0)
+            // Torque to be output
+            SIGNAL(input_torque,                       CartesianVector3,                 0.0)
+
         END_INPUTS
 
         // Model outputs
         //         NAME                     TYPE                    DEFAULT VALUE
         START_OUTPUTS
-            /** The torque vector from the cross product of m x B */
+            // Follows input_torque
             SIGNAL(output_torque,                       CartesianVector3,                 0.0)
+
         END_OUTPUTS
 
         int16 activate() override;

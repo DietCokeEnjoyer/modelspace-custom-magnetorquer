@@ -4,8 +4,9 @@ imdata = {"displayname" : "Magnetorquer Model",
           "exclude" : False,
           "category" : "Custom"
 }
-aliases = {"m" : "Magnetic dipole vector",
+aliases = {"m_prime" : "m prime, # of wire turns (n) * vector area of the coil (A).",
            "B" : "Magnetic field vector",
+           "I" : "Current",
            "torque" : "Torque"
 }
 */
@@ -32,26 +33,26 @@ namespace modelspace {
         // Model params
         //         NAME                     TYPE                    DEFAULT VALUE
         START_PARAMS
-            /** Magnetic dipole vector. Currently a parameter, will later be a function of : # of wire turns (n), current (I), vector area of the coil (A). */
-            SIGNAL(m,                       CartesianVector3,                 0)
+            /** # of wire turns (n) * vector area of the coil (A). */
+            SIGNAL(m_prime,                 CartesianVector3,       0)
         END_PARAMS
 
         // Model inputs
         //         NAME                     TYPE                    DEFAULT VALUE
         START_INPUTS
-            /** Magnetic field vector input. Typically earths magnetic field. */
-            SIGNAL(B,                       CartesianVector3,                 0)
+            /** Magnetic field vector. Usually Earth's for our purposes.*/
+            SIGNAL(B,                       CartesianVector3,        0)
 
-            /** Amount of time that the magnetorquer will apply torque. TODO: determine what the default time step is, and determine units for this parameter. */
-            SIGNAL(duration,                 int,                 0)
+            /** Current */
+            SIGNAL(I,                       double,                   0)
 
         END_INPUTS
 
         // Model outputs
         //         NAME                     TYPE                    DEFAULT VALUE
         START_OUTPUTS
-            /** The torque vector from the cross product of m x B */
-            SIGNAL(torque,                       CartesianVector3,                 0.0)
+            /** Torque from the cross product of m x B */
+            SIGNAL(torque,                  CartesianVector3,       0.0)
         END_OUTPUTS
 
         int16 activate() override;
@@ -62,6 +63,7 @@ namespace modelspace {
         int16 execute() override;
         
         CartesianVector3 torque_internal;
+        CartesianVector3 m;
     };
 
 }

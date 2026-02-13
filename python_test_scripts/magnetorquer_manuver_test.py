@@ -1,8 +1,8 @@
 """
-Simple Torquer Model & Manuver Test
+Simple Magnetorquer Model & Manuver Test
 ----------------------------------
-Tests the simple torquer model and maneuver pattern by applying different torques
-to a spacecraft over a few time intervals, and displays the maneuvers with VizKitPlanetRelative.
+Tests the magnetorquer model by applying different currents to a magnetorquer over a few time intervals, 
+and displays these maneuvers with VizKitPlanetRelative.
 
 Author: Elias Dahl
 """
@@ -34,11 +34,13 @@ site.addsitedir(build_path)
 
 # Modelspace Imports
 from modelspace.Spacecraft import Spacecraft
-from modelspace.ModelSpacePy import SimulationExecutive, DEGREES_TO_RADIANS, connectSignals, CartesianVector3, Node, Time
+from modelspace.WorldMagneticFieldModel import WorldMagneticFieldModel
+from modelspace.FrameStateSensorModel import FrameStateSensorModel
+from modelspace.ModelSpacePy import SimulationExecutive, DEGREES_TO_RADIANS, connectSignals, CartesianVector3, Node, Time, DERIVATIVE
 from modelspace.SpicePlanet import SpicePlanet
 from modelspaceutils.vizkit.VizKitPlanetRelative import VizKitPlanetRelative
 
-from modelspace.Torquer import Torquer
+from modelspace.Magnetorquer import Magnetorquer
 
 # The simulation rate / time step size, e.g. 100Hz -> 0.1 sec time steps.
 SIMULATION_RATE_HZ = 100
@@ -55,14 +57,33 @@ earth = SpicePlanet(exc, "earth")
 sc = Spacecraft(exc, "sc")
 sc.params.planet_ptr(earth)
 
+
+# Determine where the spacecraft is so we know the field at that pos.
+pos_sensor = FrameStateSensorModel(exc, DERIVATIVE, "pos_sensor")
+
+pos_sensor.params.target_frame_ptr(sc.body())                 
+pos_sensor.params.reference_frame_ptr(earth.outputs.rotating_frame())
+
+# Set up magnetic field
+mag_field = WorldMagneticFieldModel(exc, DERIVATIVE, "mag_field")
+
+connectSignals(pos_sensor.outputs.pos_tgt_ref__out, mag_field.inputs.pos_body_planet__pcr)
+
 # Creates the torquer model
-torquer_model = Torquer(exc, "torquer_model")
+magnetorquer = Magnetorquer(exc, DERIVATIVE, "magnetorquer")
+
+# Set m_prime based on orientation of the rod, on x-axis here.
+# Value from aidan sim
+magnetorquer.params.m_prime(CartesianVector3([0.36674, 0.0, 0.0]))
+
+# Connect field to torquer. 
+connectSignals(mag_field.outputs.mag_field__NED, magnetorquer.inputs.B)
 
 # Creates a node that the torquer model will output torque to, and connect it to the spacecraft.
-torquer_node = Node("torquer_node", sc.body())
+magnetorquer_node = Node("magnetorquer_node", sc.body())
 
 # Connect the torquer model output to the torque node input
-connectSignals(torquer_model.outputs.output_torque, torquer_node.moment)
+connectSignals(magnetorquer.outputs.torque, magnetorquer_node.moment)
 
 # Set up planet vizkit, which displays our spacecraft and earth.
 vk = VizKitPlanetRelative(exc)
@@ -70,8 +91,8 @@ vk = VizKitPlanetRelative(exc)
 vk.planet(earth.outputs.inertial_frame())
 
 # Adds the spacecraft to the vizkit. Both are necessary.
-vk.target(sc.outputs.body())
-vk.addSpacecraft(sc.outputs.body())
+vk.target(sc.body())
+vk.addSpacecraft(sc.body())
 
 # Adds the vizkit to the simulation exc and sets its display rate.
 exc.logManager().addLog(vk, SIMULATION_RATE_HZ)
@@ -89,17 +110,17 @@ while not exc.isTerminated():
 
     current_time = exc.time().base_time().asFloatingPoint()
     if current_time < 5.0:
-        # Applies no torque.
-        torquer_model.inputs.input_torque(CartesianVector3([0.0, 0.0, 0.0]))
+        # Applies no torque/ current.
+        magnetorquer.inputs.I(0)
     elif current_time < 10.0:
-        # Applies 0.1 Nm torque on the X-axis.
-        torquer_model.inputs.input_torque(CartesianVector3([0.1, 0.0, 0.0]))
+        # Spin
+        magnetorquer.inputs.I(0.001)
     elif current_time < 20.0:
-        # Applies -0.1 Nm torque on the X-axis
-        torquer_model.inputs.input_torque(CartesianVector3([-0.1, 0.0, 0.0]))
+        # Spin the other way!
+        magnetorquer.inputs.I(-0.001)
     else:
-         # Applies no torque.
-        torquer_model.inputs.input_torque(CartesianVector3([0.0, 0.0, 0.0]))
+         # Stop current/torque and drift
+        magnetorquer.inputs.I(0)
 
     exc.step()
 

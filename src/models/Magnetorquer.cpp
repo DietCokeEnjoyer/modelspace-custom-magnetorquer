@@ -66,8 +66,6 @@ namespace modelspace
         // went fine, and is an alias for 0. Anything nonzero is intepreted by
         // the sim as an error
 
-        // TODO: pre-calculate n*A as it won't change.
-
         return NO_ERROR;
     }
 
@@ -77,16 +75,11 @@ namespace modelspace
         // Guide, valid steps are START_STEP, DERIVATIVE, and END_STEP. In general
         // here is where you should write values to all outputs on the basis of
         // inputs and params.
+        m = inputs.I() * params.m_prime();
+        // torque = m x B.
+        cross(m, inputs.B(), torque_internal);
 
-        if (inputs.duration() > 0)
-        {
-            // Set torque = m x B.
-            cross(params.m(), inputs.B(), torque_internal);
-            outputs.torque(torque_internal);
-
-            // Decrement from remaining active duration.
-            inputs.duration(inputs.duration() - 1);
-        }
+        outputs.torque(torque_internal);
 
         // Model functions always return an error code. NO_ERROR means everything
         // went fine, and is an alias for 0. Anything nonzero is intepreted by
