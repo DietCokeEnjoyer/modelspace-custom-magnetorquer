@@ -19,9 +19,9 @@ namespace modelspace
     // in the first two instances of the constructor. This sets the default step for
     // the model to run in (see User's Guide for more info)
     Magnetorquer::Magnetorquer(Model &pnt, const std::string &m_name)
-        : Model(pnt, START_STEP, m_name) {}
+        : Model(pnt, DERIVATIVE, m_name) {}
     Magnetorquer::Magnetorquer(SimulationExecutive &e, const std::string &m_name)
-        : Model(e, START_STEP, m_name) {}
+        : Model(e, DERIVATIVE, m_name) {}
     Magnetorquer::Magnetorquer(Model &pnt, int schedule_slot, const std::string &m_name)
         : Model(pnt, schedule_slot, m_name) {}
     Magnetorquer::Magnetorquer(SimulationExecutive &e, int schedule_slot, const std::string &m_name)
