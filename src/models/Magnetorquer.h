@@ -33,7 +33,7 @@ namespace modelspace {
         // Model params
         //         NAME                     TYPE                    DEFAULT VALUE
         START_PARAMS
-            /** # of wire turns (n) * vector area of the coil (A). */
+            /** Number of wire turns (n) * vector area of the coil (A). */
             SIGNAL(m_prime,                 CartesianVector3,       0)
         END_PARAMS
 
